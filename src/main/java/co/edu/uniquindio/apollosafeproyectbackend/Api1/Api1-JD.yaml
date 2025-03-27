@@ -1,0 +1,868 @@
+openapi: 3.0.0
+info:
+  title: API de Reportes Ciudadanos
+  version: 1.0.0
+  description: "API para la gestión de reportes ciudadanos y autenticación de usuarios."
+  contact:
+    name: Soporte API
+    email: juand.lopezh@uqvirtual.edu.co
+    url: https://ejemplo.com/soporte
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:8080
+    description: Servidor local de desarrollo
+security:
+  - BearerAuth: []
+paths:
+  /auth/register:
+    post:
+      summary: Registrar un nuevo usuario con validación por correo electrónico
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: Usuario registrado exitosamente, pendiente de activación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Datos de entrada inválidos
+        '409':
+          description: Correo ya registrado
+        '500':
+          description: Error interno del servidor
+      security: []
+  /auth/activate:
+    post:
+      summary: Activar cuenta con código de validación
+      operationId: activateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationRequest'
+      responses:
+        '200':
+          description: Cuenta activada exitosamente
+        '400':
+          description: Código inválido o expirado
+        '404':
+          description: Usuario no encontrado
+        '500':
+          description: Error interno del servidor
+  /users/{id}:
+    patch:
+      summary: Editar datos personales
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '204':
+          description: Datos actualizados exitosamente
+        '400':
+          description: Datos inválidos
+        '403':
+          description: No autorizado para modificar este usuario
+        '404':
+          description: Usuario no encontrado
+        '500':
+          description: Error interno del servidor
+    delete:
+      summary: Eliminar cuenta de usuario
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cuenta eliminada exitosamente
+        '403':
+          description: No autorizado para eliminar este usuario
+        '404':
+          description: Usuario no encontrado
+        '500':
+          description: Error interno del servidor
+  /users/{id}/delete-request:
+    post:
+      summary: Solicitar la eliminación de la cuenta
+      operationId: requestAccountDeletion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Solicitud de eliminación enviada exitosamente
+        '403':
+          description: No autorizado para solicitar eliminación de esta cuenta
+        '404':
+          description: Usuario no encontrado
+        '500':
+          description: Error interno del servidor
+  /auth/admin/login:
+    post:
+      security:
+        - BearerAuth: []
+      summary: Iniciar sesión como administrador
+      tags:
+        - Administración
+      operationId: loginAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Credenciales incorrectas o cuenta no activada
+        '403':
+          description: No autorizado
+        '500':
+          description: Error interno del servidor
+  /auth/login:
+    post:
+      summary: Iniciar sesión
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Credenciales incorrectas o cuenta no activada
+        '500':
+          description: Error interno del servidor
+  /reports:
+    post:
+      summary: Crear un nuevo reporte
+      operationId: createReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Report'
+            example:
+              title: "Fuga de agua en la calle"
+              description: "Hay una fuga de agua en la intersección de la calle 5 con avenida central"
+              latitude: -12.345678
+              longitude: 45.678901
+              imageUrls:
+                - "https://ejemplo.com/imagen1.jpg"
+                - "https://ejemplo.com/imagen2.jpg"
+      responses:
+        '201':
+          description: Reporte creado exitosamente
+        '400':
+          description: Datos de entrada inválidos
+        '500':
+          description: Error interno del servidor
+  /reports/{id}:
+    delete:
+      summary: Eliminar un reporte
+      operationId: deleteReport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Reporte eliminado exitosamente
+        '403':
+          description: No autorizado para eliminar este reporte
+        '404':
+          description: Reporte no encontrado
+        '500':
+          description: Error interno del servidor
+  /reports/{id}/status:
+    patch:
+      summary: Actualizar el estado de un reporte (resolver, verificar, rechazar)
+      operationId: updateReportStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportStatusUpdate'
+      responses:
+        '200':
+          description: Estado actualizado exitosamente
+        '400':
+          description: Estado inválido
+        '401':
+          description: Estado incorrecto
+        '404':
+          description: Reporte no encontrado
+        '500':
+          description: Error interno del servidor
+  /reports/{id}/important:
+    post:
+      summary: Marcar un reporte como importante
+      operationId: markReportImportant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reporte marcado como importante exitosamente
+        '401':
+          description: Reporte incorrecto o mal creado
+        '404':
+          description: Reporte no encontrado
+        '500':
+          description: Error interno del servidor
+  /notifications:
+    get:
+      summary: Obtener notificaciones en tiempo real
+      operationId: getNotifications
+      responses:
+        '200':
+          description: Lista de notificaciones obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '500':
+          description: Error interno del servidor
+  /reports/{id}/comments:
+    post:
+      summary: Agregar un comentario a un reporte
+      operationId: addComment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+      responses:
+        '201':
+          description: Comentario agregado exitosamente
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Reporte no encontrado
+        '500':
+          description: Error interno del servidor
+    get:
+      summary: Obtener comentarios de un reporte
+      operationId: getComments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de comentarios obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportComment'
+        '404':
+          description: Reporte no encontrado
+        '500':
+          description: Error interno del servidor
+  /categories:
+    get:
+      summary: Obtener todas las categorías
+      tags:
+        - Categorías
+      responses:
+        "200":
+          description: Lista de categorías obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+        "500":
+          description: Error interno del servidor
+    post:
+      summary: Crear una nueva categoría
+      tags:
+        - Categorías
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryCreate"
+      responses:
+        "201":
+          description: Categoría creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "400":
+          description: Datos inválidos
+        "403":
+          description: No autorizado para crear categorías
+        "500":
+          description: Error interno del servidor
+  /categories/{id}:
+    patch:
+      summary: Editar una categoría
+      tags:
+        - Categorías
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryCreate"
+      responses:
+        "200":
+          description: Categoría actualizada correctamente
+        "400":
+          description: Datos inválidos
+        "403":
+          description: No autorizado para editar categorías
+        "404":
+          description: Categoría no encontrada
+        "500":
+          description: Error interno del servidor
+    delete:
+      summary: Eliminar una categoría
+      tags:
+        - Categorías
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Categoría eliminada correctamente
+        "403":
+          description: No autorizado para eliminar categorías
+        "404":
+          description: Categoría no encontrada
+        "500":
+          description: Error interno del servidor
+  /reports/{id}/reject:
+    patch:
+      summary: Rechazar un reporte con un motivo
+      tags:
+        - Reportes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportRejection"
+      responses:
+        "200":
+          description: Reporte rechazado correctamente
+        "400":
+          description: Datos inválidos
+        "403":
+          description: No autorizado para rechazar reportes
+        "404":
+          description: Reporte no encontrado
+        "500":
+          description: Error interno del servidor
+  /reportes:
+    get:
+      summary: Obtener una lista de reportes
+      tags:
+        - Reportes
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ pendiente, verificado, rechazado, resuelto ]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Lista de reportes obtenida correctamente
+        "400":
+          description: Parámetros inválidos
+        "401":
+          description: No autenticado
+        "403":
+          description: No autorizado para ver reportes
+        "500":
+          description: Error interno del servidor
+  /reports/statistics:
+    get:
+      summary: Generar informe de reportes por sector/categoría
+      tags:
+        - Reportes
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: sector
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [ json, pdf ]
+      responses:
+        "200":
+          description: Informe generado correctamente
+        "400":
+          description: Parámetros inválidos
+        "401":
+          description: No autenticado
+        "403":
+          description: No autorizado para generar informes
+        "500":
+          description: Error interno del servidor
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserRegistration:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: [user, admin]
+      required:
+        - fullName
+        - email
+        - password
+        - role
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+      required:
+        - id
+        - fullName
+        - email
+        - role
+    UserLogin:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+    ActivationRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+      required:
+        - email
+        - code
+    UserUpdate:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+      required:
+        - fullName
+        - email
+    Report:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        imageUrls:
+          type: array
+          items:
+            type: string
+      required:
+        - title
+        - description
+        - latitude
+        - longitude
+    ReportStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, verified, resolved, rejected]
+      required:
+        - status
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - name
+    ReportRejection:
+      type: object
+      description: se encarga de rechazar los reportes
+      properties:
+        reason:
+          type: string
+      required:
+        - reason
+    ReportPriority:
+      type: object
+      description: se refiere a la prioridad que tiene el reporte
+      properties:
+        reason:
+          type: string
+      required:
+        - reason
+    ReportComment:
+      type: object
+      properties:
+        id:
+          type: string
+        reportId:
+          type: string
+        userId:
+          type: string
+        ReportComment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - reportId
+        - userId
+        - comment
+        - createdAt
+    CategoryCreate:
+      type: object
+      description: se crea una categoria
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "vandalismo"
+        description:
+          type: string
+          example: "Reportes sobre daños"
+    Notifications:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        message:
+          type: string
+        notificationType:
+          type: string
+          enum: [reportCreated, reportResolved, reportCommented]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - message
+        - notificationType
+        - createdAt
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        reportId:
+          type: string
+        userId:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - reportId
+        - userId
+        - content
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - userId
+        - message
+    status:
+      type: string
+      enum: [pendiente, verificado, rechazado, resuelto]
+      example: "pendiente"
+    categories:
+      type: array
+      items:
+        type: string
+        example: "Robo"
+    importanceCount:
+      type: integer
+      example: 10
+    createAt:
+      type: string
+      format: date-time
+    updateAt:
+      type: string
+      format: date-time
+    ReportCreate:
+      type: object
+      required:
+        - title
+        - description
+        - location
+        - categories
+      properties:
+        title:
+          type: string
+          example: "Auto abandonado"
+        description:
+          type: string
+          example: "Hay un auto abandonado en la esquina de la calle 5 con avenida principal"
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+              format: double
+              example: 19.432608
+            longitude:
+              type: number
+              format: double
+              example: -99.133209
+        categories:
+          type: array
+          items:
+            type: string
+            example: "Vehículos abandonados"
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "abc12345-e89b-12d3-a456-426614174002"
+        name:
+          type: string
+          example: "Juan Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+        role:
+          type: string
+          enum: [ cliente, moderador, administrador ]
+          example: "cliente"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-05T10:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-10T08:00:00.000Z"
+    UserRegister:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          example: "María López"
+        email:
+          type: string
+          format: email
+          example: "maria.lopez@example.com"
+        password:
+          type: string
+          format: password
+          example: "password123"
+    ReportStatistics:
+      type: object
+      properties:
+        totalReports:
+          type: integer
+          example: 150
+        reportsByCategory:
+          type: object
+          additionalProperties:
+            type: integer
+          example:
+            "Robo": 45
+            "Vandalismo": 30
+            "Accidente": 75
+    ReportsBySector:
+      type: object
+      additionalProperties:
+        type: integer
+      example:
+        "Centro": 80
+        "Norte": 40
+        "Sur": 30
+    timeFrame:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+          example: "2025-03-01"
+        endDate:
+          type: string
+          format: date
+          example: "2025-03-12"
+
