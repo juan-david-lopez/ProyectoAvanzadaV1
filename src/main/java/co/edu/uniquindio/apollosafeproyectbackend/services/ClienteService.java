@@ -5,5 +5,7 @@ import co.edu.uniquindio.apollosafeproyectbackend.dto.requests.UsuarioDeleteRequ
 import co.edu.uniquindio.apollosafeproyectbackend.dto.responses.ClienteResponse;
 
 public interface ClienteService {
-    ClienteResponse createCliente(ClienteRegistrationRequest cliente);
+    ClienteResponse createCliente(ClienteRegistrationRequest clienteRegistrationRequest);
+    String veryfyCliente(String token);
+
 }

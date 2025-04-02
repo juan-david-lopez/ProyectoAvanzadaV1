@@ -1,6 +1,7 @@
 package co.edu.uniquindio.apollosafeproyectbackend.models;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -18,7 +19,9 @@ public class Reporte {
     String descripcion;
     @DBRef
     List<Categoria> categorias;
+    @GeoSpatialIndexed
     Ubicacion ubicacion;
+
     List<String> imagenes;
     List<String> Comentarios;
     LocalDateTime fechaPublicacion;

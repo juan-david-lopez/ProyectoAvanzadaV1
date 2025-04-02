@@ -30,5 +30,6 @@ public record ClienteRegistrationRequest(
         String contrasena) {
 
     public ClienteRegistrationRequest {
+
     }
 }

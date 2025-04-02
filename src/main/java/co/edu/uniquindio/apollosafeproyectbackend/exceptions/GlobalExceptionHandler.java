@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.Collection;
 import java.util.List;
 
 @ControllerAdvice
@@ -18,11 +19,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<ErrorResponse>> handleValueConflictException(MethodArgumentNotValidException ex) {
-
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
                 ex.getFieldErrors().stream().map(
                         e->new ErrorResponse("ERROR",e.getField()+"->"+e.getDefaultMessage())
                 ).toList()
         );
+    }
+    @ExceptionHandler(TokenConflictException.class)
+    public ResponseEntity<List<Object>> handleTokenConflictException(TokenConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(List.of(ex.getMessage()));
     }
 }

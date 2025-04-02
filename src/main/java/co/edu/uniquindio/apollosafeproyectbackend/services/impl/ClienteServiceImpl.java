@@ -47,9 +47,8 @@ public class ClienteServiceImpl implements ClienteService {
                 cliente.getEmail()
         );
     }
-
     @Override
-    public void eliminarUsuario(UsuarioDeleteRequest usuario) {
+    public ClienteResponse verifyCliente(ClienteVerificationRequest clienteVerificationRequest) {
 
     }
 }

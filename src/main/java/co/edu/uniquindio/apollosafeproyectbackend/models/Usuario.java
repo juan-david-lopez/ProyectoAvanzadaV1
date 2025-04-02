@@ -2,6 +2,7 @@ package co.edu.uniquindio.apollosafeproyectbackend.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @AllArgsConstructor
